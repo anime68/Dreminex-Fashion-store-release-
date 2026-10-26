@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dreminexfashion.store",
+      "sha256_cert_fingerprints": ["41:4E:61:30:21:A0:F7:86:24:48:76:56:48:3F:3B:32:64:5A:CC:61:B4:A4:6C:CF:D9:4D:94:10:AC:C7:2E:74"]
+    }
+  }
+]

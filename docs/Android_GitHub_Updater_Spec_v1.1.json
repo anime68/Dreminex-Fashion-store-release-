@@ -1,0 +1,1056 @@
+{
+  "specification_format": "dreminex.codex.implementation-plan.v1.1",
+  "spec_type": "codex_implementation_blueprint",
+  "title": "Dreminex Fashion Android Store App — GitHub Releases APK Distribution and In-App Updater",
+  "version": "1.1.0",
+  "authored_at_utc": "2026-10-25",
+  "language": "bn-BD",
+  "status": "CODEX_SPECIFICATION_ONLY_NOT_IMPLEMENTED",
+  "project_separation": {
+    "standalone_project_id": "dreminex-android-customer-store",
+    "do_not_merge_with": [
+      "dreminex-native-mcp-expansion",
+      "dreminex-product-preparation",
+      "dreminex-nexus-staff-app"
+    ],
+    "independent_repo_recommended": true,
+    "wp_source_write_in_this_task": false
+  },
+  "owner_goal": "Separate Android customer store app linked to production website, installed from the existing website footer Install Dreminex App entry point as a signed APK hosted in public GitHub Releases, with native in-app version detection and user-confirmed update installation; absolutely no Google Play distribution or Play Core In-App Updates.",
+  "live_store": {
+    "origin": "https://dreminexfashion.store/",
+    "environment": "production",
+    "wordpress": "existing",
+    "commerce_engine": "WooCommerce",
+    "website_production_changes_require_owner_approval": true,
+    "verification_status": "prior connected-site context only; current storefront/PWA end-to-end audit not performed; web fetch was unavailable"
+  },
+  "architecture": {
+    "v1_recommended": "PWA + Android TWA with Kotlin native update-check/settings Activity; GitHub Releases as APK distribution source",
+    "android_builder": "Android Studio Gradle + Bubblewrap/TWA; keep custom native Kotlin updater module/activity and release-channel configuration",
+    "website_as_single_source_of_truth": true,
+    "customer_facing_only": true,
+    "keep_server_side_checkout": true,
+    "alternatives": {
+      "native_flutter_or_kotlin": "Optional phase 2; requires a complete new UI and robust authenticated API/backend integration",
+      "plain_webview": "Fallback only if TWA unsupported and after security + Play policy review, not first choice"
+    },
+    "reason": "TWA displays production-origin store, while a small native Android shell checks GitHub Releases and invokes Android system PackageInstaller after SHA-256 and signer verification; websites changes remain server-driven."
+  },
+  "android_application": {
+    "display_name": "Dreminex Fashion",
+    "package_name_proposal": "com.dreminexfashion.store",
+    "package_name_must_be_verified_unique": true,
+    "deep_link_origins": [
+      "https://dreminexfashion.store/"
+    ],
+    "theme_colour_proposal": "#00B4D8",
+    "release_artifacts": [
+      "debug APK (test only)",
+      "signed customer APK uploaded as a GitHub Release asset",
+      "sha256 digest plus signed update manifest or GitHub release metadata",
+      "source tag and release notes"
+    ],
+    "signing": {
+      "release_keystore": "Private: never commit to GitHub, APK assets, WordPress, or task reports; store encrypted/offline or in protected CI secrets",
+      "one_stable_certificate": "First public release and every future APK update must retain same signing identity; consider supported signer rotation only with documented Android compatibility constraints",
+      "digital_asset_links": "Publish actual SHA-256 fingerprint of same APK signing cert to production /.well-known/assetlinks.json after approval",
+      "reproducible_build": "version controlled Gradle settings, locked dependencies, CI release signing environment with protected tags and human approval",
+      "package_name": "Verify old installs; if migrating an existing Android APK use same applicationId and signer; PWA shortcut/WebAPK is not generally directly upgradeable into an unrelated native APK"
+    },
+    "android_permissions_minimize": true,
+    "distribution": "github_releases_only",
+    "versioning": {
+      "require_version_code_monotonic": true,
+      "version_name_semver": "user-facing only; numeric Android versionCode is authority",
+      "min_sdk": "derive from Android target devices; test current OS install policy",
+      "package_name_proposal": "com.dreminexfashion.store (verify uniqueness and any existing release before using)"
+    }
+  },
+  "pwa": {
+    "manifest_path": "DISCOVER_FROM_LIVE_SITE",
+    "required_manifest_fields": [
+      "id",
+      "name",
+      "short_name",
+      "start_url",
+      "scope",
+      "display",
+      "theme_color",
+      "background_color",
+      "icons_192",
+      "icons_512",
+      "maskable_icon"
+    ],
+    "twa_site_verification_path": "/.well-known/assetlinks.json",
+    "assetlinks_require_real_fingerprint": true,
+    "service_worker": "review and preserve existing functional PWA plugin setup",
+    "offline": "public/static cache only; offline cart/checkout transactions not supported",
+    "no_stale_dynamic_routes": [
+      "/cart/",
+      "/checkout/",
+      "/my-account/",
+      "/wp-json/wc/store/",
+      "/wp-json/wc/v3/",
+      "private customer pages"
+    ],
+    "website_changes_sync": "Network-origin content reflects newly published products, changes in prices, inventory, promotions, content, and theme; refresh/revalidation behavior depends on caching and connectivity."
+  },
+  "commerce": {
+    "v1_transport": "Use original website TWA and original WooCommerce session/checkout",
+    "future_native_ui_source": "WooCommerce Store API + explicit authenticated backend for customer-only private workflows",
+    "public_api_example": "https://dreminexfashion.store/wp-json/wc/store/v1/products",
+    "do_not_embed": [
+      "WC Consumer Key",
+      "WC Consumer Secret",
+      "MCP access token",
+      "wp-admin credentials",
+      "WordPress Application Password"
+    ],
+    "account_order_access": "Only current authenticated customer, no global admin REST access",
+    "custom_payment_gateways": "audit and test in website/TWA before claiming parity"
+  },
+  "versions_and_updates": {
+    "content_update": {
+      "website_changes_need_new_binary": false,
+      "online_network_revalidation": true,
+      "refresh_on_resume_optional": true,
+      "cache_exclusions": [
+        "cart",
+        "checkout",
+        "account",
+        "private order data",
+        "WooCommerce Store API authenticated routes"
+      ]
+    },
+    "distribution_channel": "GitHub Releases, public repo or separate public releases repo; customers must not need GitHub login or app-embedded token",
+    "google_play": {
+      "enabled": false,
+      "aab_build_required": false,
+      "play_core_in_app_updates": false,
+      "play_store_links": false,
+      "no_mixed_distribution_channel": true
+    },
+    "github_release": {
+      "repo_owner": "CONFIGURE_FROM_ACTUAL_GITHUB_REPOSITORY",
+      "repo_name": "CONFIGURE_FROM_ACTUAL_GITHUB_REPOSITORY",
+      "latest_stable_api_template": "https://api.github.com/repos/{owner}/{repo}/releases/latest",
+      "release_tags": "vMAJOR.MINOR.PATCH",
+      "release_asset_name": "dreminex-fashion-release.apk",
+      "additional_assets": [
+        "update-manifest.json",
+        "checksums.sha256",
+        "release-notes.md (optional)"
+      ],
+      "require_public_release": true,
+      "ignore_drafts_and_prereleases": true,
+      "allow_prerelease_only_in_explicit_beta_build": true,
+      "official_github_api_as_source": true,
+      "asset_validation": "Select ONLY expected APK asset for configured repo; check final redirected host policy; never accept arbitrary user-provided APK URL",
+      "asset_digest": "When available, use GitHub Releases asset digest sha256 and/or signed update-manifest SHA-256; independently calculate SHA-256 on downloaded file",
+      "api_failures": "Use exponential backoff and cached verified latest release, not crash or block shopping; handle 404, 403 rate limiting, timeouts and revoked files",
+      "api_auth": "Do not embed personal access tokens in client APK; use public releases or read-through cache on controlled origin if necessary"
+    },
+    "updater": {
+      "component": "Native Kotlin Activity/UpdaterRepository/Downloader/Installer integrated with TWA launcher; no privileged JavaScript bridge",
+      "trigger": [
+        "on app launch once cache TTL expires",
+        "on app resume with throttling",
+        "manual Check for updates item in native app settings",
+        "optional gentle update notification when new stable release confirmed"
+      ],
+      "check_cadence_hours": 24,
+      "mobile_data": "Do not automatically download APK without user approval; show APK size and prefer Wi-Fi setting as user preference",
+      "compare": "remote version_code > installed PackageInfo.longVersionCode; no same-version reinstall or downgrades",
+      "download": "Android DownloadManager or safe streaming into app-specific cache with progress; HTTPS only; no broad storage access",
+      "validate": [
+        "expected package_name",
+        "actual downloaded SHA-256 equals trusted manifest/release digest",
+        "APK signature certificate matches installed APK signing identity, or Android-supported verified key rotation",
+        "versionCode strictly increasing",
+        "compatible minimum Android SDK / supported ABIs"
+      ],
+      "install": "Use Android PackageInstaller or ACTION_INSTALL_PACKAGE with FileProvider content URI, correct MIME and user-consented system confirmation",
+      "unknown_sources": "On Android 8+ check canRequestPackageInstalls; when needed direct user to ACTION_MANAGE_UNKNOWN_APP_SOURCES for current app only; never bypass consent",
+      "install_permissions": "Evaluate REQUEST_INSTALL_PACKAGES for app-initiated installer; keep no INSTALL_PACKAGES privilege, no Accessibility automation and no unattended install",
+      "prompt_type": [
+        "Update available: version and release notes",
+        "Download update",
+        "Install update (opens Android confirmation)",
+        "Later",
+        "Manual check"
+      ],
+      "failed_install": "Delete untrusted temp APK; leave installed app and website functionality untouched; diagnostic error without exposing secrets",
+      "older_app_support": "Optional minimum_supported_version_code for cautionary compatibility alert; do not lock customer out of website by default",
+      "optional_verified_channel_manifest": "Prefer signed update-manifest.json published with each GitHub release; include manifest-signature and trust public key embedded in APK, if designing an enhanced supply-chain check"
+    },
+    "direct_install_first_time": {
+      "website_entry": "Existing footer/button label Install Dreminex App",
+      "on_android_browser": "Show transparent explanation: Download Android APK (GitHub Releases) and installation guidance; never disguise it as Google Play",
+      "existing_pwa_path": "Preserve existing PWA install for non-Android platforms and as optional separate PWA choice; do not silently remove current PWA functionality",
+      "existing_pwa_android": "If an Android PWA/WebAPK already installed, inform user that signed APK is a distinct install and may coexist; verify UI/launcher name duplication and optional migration plan",
+      "same_source_release": "Download button should use latest verified stable GitHub Release APK matching app updater policy, not arbitrary hard-coded release version",
+      "no_unapproved_site_edits": true,
+      "hide_or_change_cta_inside_twa": "After confirmed Android shell launch, show Open App or Check Updates instead of re-install prompt; UI context flag only, never auth/security decision"
+    }
+  },
+  "notifications": {
+    "phase": "optional",
+    "fcm_customer_push": "opt-in and backend-authorized",
+    "web_push": "evaluate support on target browser/TWA and current PWA plugin",
+    "no_sensitive_payload": true
+  },
+  "tasks": [
+    {
+      "id": "A01",
+      "phase": "audit",
+      "title": "Read-only storefront and PWA audit",
+      "actions": [
+        "Confirm live domain, TLS, redirects, web manifest, service worker, mobile responsive breakpoints and Lighthouse PWA basics",
+        "Map all essential WooCommerce storefront journeys: home, search, category, product/variation, cart, checkout, payment, account, order status, contact",
+        "List which checkout/payment/account components are cross-origin, popup, JavaScript-driven, or incompatible with TWA and their return URLs",
+        "Inspect existing Dreminex PWA plugin if present and reuse functioning setup; avoid conflicting second manifest or service worker",
+        "Audit site CDN/page cache rules, especially account/cart/checkout/auth and dynamic prices/stock"
+      ],
+      "outputs": [
+        "PWA audit report",
+        "compatibility checklist",
+        "site changes plan only"
+      ],
+      "acceptance": [
+        "No duplicate service worker registrations or overlapping service worker scopes",
+        "Checkout and private/account paths are not served stale user-specific content"
+      ]
+    },
+    {
+      "id": "A02",
+      "phase": "architecture",
+      "title": "Separate app repo and immutable production origin",
+      "actions": [
+        "Create Android-specific repository /android-store-app; do not merge with Dreminex Suite Native MCP project",
+        "Use website as the sole source of truth for product/catalog/price/stock/content/checkout for v1",
+        "Keep native APK packaging independent from WordPress plugins and server-side MCP infrastructure",
+        "Select final packageName and project display name after collision check; store package name and signing keys as protected release assets",
+        "Use exactly one customer GitHub-stable APK build channel; keep separate debug signing identities."
+      ],
+      "outputs": [
+        "architecture decision record",
+        "dependency inventory",
+        "separate release pipeline"
+      ],
+      "acceptance": [
+        "No WordPress admin, OAuth MCP, API secret, customer token or private key embedded in APK",
+        "Staging/test URLs cannot enter production release accidentally"
+      ]
+    },
+    {
+      "id": "A03",
+      "phase": "pwa",
+      "title": "PWA assets and live website sync",
+      "actions": [
+        "Verify/repair web app manifest with id, name, short_name, start_url, scope, theme_color, background_color, display and required icon sizes including maskable",
+        "Validate HTTPS, service worker registration, offline fallback, network retry and session handling",
+        "Never precache checkout, cart, account, payment, wallet or live stock/price API JSON as fixed snapshots",
+        "Use appropriate network-first/no-store semantics for live storefront and personalized responses",
+        "Ensure website catalog changes appear on next navigation/refresh without APK rebuild",
+        "Do not promise offline ordering; present informative offline fallback"
+      ],
+      "outputs": [
+        "manifest and service worker contract",
+        "cache matrix",
+        "sync behavior tests"
+      ],
+      "acceptance": [
+        "Changing site price/stock updates app display when online without APK version bump",
+        "No cross-customer cart/account data shown after sign-out or account switching"
+      ]
+    },
+    {
+      "id": "A04",
+      "phase": "android",
+      "title": "Build signed Android TWA and native Kotlin updater shell",
+      "actions": [
+        "Create reproducible Bubblewrap Trusted Web Activity Android project from audited manifest",
+        "Use Digital Asset Links on /.well-known/assetlinks.json with actual release certificate fingerprints",
+        "Verify full-screen origin association, launch behavior and safe fallback on failed validation",
+        "Test internal links, app links, Android back, refresh, orientation, file chooser, camera intents and downloads where supported",
+        "Test all external payment redirects and return URL deep links; maintain https-only trusted origins",
+        "Include native update entry in launcher/settings accessible outside web page TWA content; do not expect web JS to invoke PackageInstaller directly",
+        "Ensure APK signing certificate fingerprint used for Digital Asset Links"
+      ],
+      "outputs": [
+        "Android project source",
+        "debug APK",
+        "signed release APK for GitHub stable channel",
+        "Native updater Activity/Repository architecture"
+      ],
+      "acceptance": [
+        "Asset Links verification passes for final signed app",
+        "All expected internal site navigation stays within authorized experience",
+        "Payment completion/cancellation/deep-link return navigates correctly"
+      ]
+    },
+    {
+      "id": "A05",
+      "phase": "commerce",
+      "title": "Customer commerce parity",
+      "actions": [
+        "Audit homepage, categories, search, variation swatches, price, stock, wishlists, offers, coupons, cart, checkout, shipping, COD and order tracking",
+        "Preserve existing WooCommerce session/cookie mechanisms in v1 TWA",
+        "Test BDT display and Bangladesh shipping location selection",
+        "Test login/logout, register/reset password, address changes and My Account flows",
+        "Test custom Dreminex checkout, delivery advance and wallet features only if exposed to customers in current storefront",
+        "Use WooCommerce Store API solely for possible future native UI, not admin WooCommerce REST API keys in device"
+      ],
+      "outputs": [
+        "feature-by-feature parity matrix",
+        "payment and shipping compatibility report"
+      ],
+      "acceptance": [
+        "Storefront core purchase paths pass on real Android devices",
+        "Order placed in app appears once in WooCommerce; no duplicate charge/order submission",
+        "Stock and prices validated server-side at checkout"
+      ]
+    },
+    {
+      "id": "A06",
+      "phase": "notifications",
+      "title": "Customer notifications and permissions",
+      "actions": [
+        "Decide whether web push is supported by target TWA/browser and existing website; otherwise implement opt-in Android FCM push as separate guarded module",
+        "Never enable marketing notifications without explicit user permission",
+        "Use backend-authorized events for order updates; avoid placing private order details in unprotected push payloads",
+        "Support Android notification channels, opt-out and token revocation on logout"
+      ],
+      "outputs": [
+        "notification strategy",
+        "optional FCM adapter specification"
+      ],
+      "acceptance": [
+        "No unconsented notification subscriptions",
+        "Order notifications do not leak personal information to another user"
+      ]
+    },
+    {
+      "id": "A07",
+      "phase": "updates",
+      "title": "Public GitHub Releases stable APK delivery and CI signing (NO GOOGLE PLAY)",
+      "actions": [
+        "Inspect actual user-designated public GitHub repository and protect signing material",
+        "Configure versioned signed APK release via protected tags, stable channel and release notes",
+        "Publish APK, update-manifest.json, checksums.sha256 as GitHub Release assets",
+        "Derive latest stable from official GitHub Releases API or verified manifest endpoint; reject prereleases and foreign assets",
+        "Never use Google Play, Play Core or AAB release as an acceptance requirement"
+      ],
+      "outputs": [
+        "GitHub Actions CI/Release workflow",
+        "signed release APK + hash + release manifest",
+        "protected signing key procedure",
+        "release rollback/checklist"
+      ],
+      "acceptance": [
+        "Public latest-stable release has correct signed APK asset/hash",
+        "App update flow does not refer to Google Play"
+      ]
+    },
+    {
+      "id": "A08",
+      "phase": "updates",
+      "title": "First install from existing website Install Dreminex App button and consented in-app APK updates",
+      "actions": [
+        "Read-only inspect existing footer Install Dreminex App button on staging and production; identify actual PWA installer handler",
+        "On Android browser, change CTA to GitHub stable signed APK or an install landing page; preserve a PWA option for other devices",
+        "Implement app launch/manual version check, native update prompt, opt-in download, SHA-256 verification, signer and package/version validation",
+        "Use Android PackageInstaller and user confirmation, including Android 8+ Install unknown apps per-source permission guidance",
+        "Provide reliable error handling and leave prior installed app intact when update/download fails",
+        "Do not change production website until owner approves patch and staging test passes"
+      ],
+      "outputs": [
+        "reversible website install CTA patch",
+        "update-check UI in Android APK",
+        "Android OS consent-based install flow",
+        "offline/retry diagnostics"
+      ],
+      "acceptance": [
+        "New customer taps website button on Android and can download approved signed APK from GitHub",
+        "User can start update from installed app with system confirmation",
+        "Same package, same certificate, higher versionCode updates over existing install without data loss",
+        "Website content changes appear without publishing new APK"
+      ]
+    },
+    {
+      "id": "A09",
+      "phase": "reliability",
+      "title": "Offline, telemetry and site outage handling",
+      "actions": [
+        "Show meaningful offline/retry page, safe cached public pages only, and open-in-browser fallback",
+        "Detect site maintenance and timeout without exposing debug traces",
+        "Collect privacy-respecting performance and crash diagnostics with consent/legal disclosures",
+        "Implement deep link routing to product URLs, categories and account paths",
+        "Evaluate accessibility, Bangla/English rendering, image load, 4G/slow networks and smaller Android screens"
+      ],
+      "outputs": [
+        "reliability tests",
+        "privacy notes",
+        "device test report"
+      ],
+      "acceptance": [
+        "No app crash on network disconnect or server 503",
+        "Checkout is never queued offline"
+      ]
+    },
+    {
+      "id": "A10",
+      "phase": "security",
+      "title": "Customer privacy and application security",
+      "actions": [
+        "No embedded wp-admin account, MCP OAuth token, WooCommerce Consumer Secret or WordPress Application Password in Android binary",
+        "Server remains authority for stock, price, delivery eligibility and final charges",
+        "Require HTTPS for trusted origins; protect WebView/TWA navigations and external intent handling",
+        "Review login session persistence, CSRF/nonce and payment redirects",
+        "Verify public privacy policy and user disclosures for direct website/GitHub APK distribution",
+        "Separate shopper app from staff/admin mobile app"
+      ],
+      "outputs": [
+        "threat model",
+        "privacy/security checklist"
+      ],
+      "acceptance": [
+        "No admin endpoints or write-capable store secrets available to ordinary app user",
+        "Account/checkout session isolation validated"
+      ]
+    },
+    {
+      "id": "A11",
+      "phase": "qa",
+      "title": "Acceptance test and staged release",
+      "actions": [
+        "Test on real devices and Android emulator; multiple Android versions, mobile networks and accessibility settings",
+        "Test product/variation price and stock update from WordPress while app already open",
+        "Test order placement, payment success/cancel, guest & logged-in checkout, coupon, taxes/shipping and restoration from background",
+        "Test GitHub stable APK updates on real Android devices, starting with signed prior version",
+        "Require explicit owner authorization for any changes to live WordPress, GitHub publication or APK rollout",
+        "Test direct GitHub APK download/install/update chain from existing footer CTA on real Android devices",
+        "Test no Google Play dependency and no silent sideloading"
+      ],
+      "outputs": [
+        "QA matrix",
+        "defect log",
+        "signed build artifact and checksums",
+        "rollback plan"
+      ],
+      "acceptance": [
+        "No regression in live website due to app launch",
+        "Production credentials and signing keys absent from repository",
+        "All critical tests pass before distribution"
+      ]
+    },
+    {
+      "id": "A12",
+      "phase": "github-release",
+      "title": "Production-ready GitHub updater failure handling, caching and observability",
+      "actions": [
+        "Limit official GitHub latest-release API polling, honor rate limits/cache headers; no GitHub token in APK",
+        "On release missing or network failure keep store working; offer retry rather than corrupted download",
+        "Reject APK with missing digest, hash mismatch, package name mismatch, unsigned/mismatched signer or non-incrementing versionCode",
+        "Handle paused/restarted downloads and user cancellation without wiping login/cart data",
+        "Version-gate app-only functionality separately from website content"
+      ],
+      "outputs": [
+        "updater state machine",
+        "error codes and user-facing messages",
+        "rate limit/cache tests"
+      ],
+      "acceptance": [
+        "No update installed on failed verification",
+        "Store remains operable during GitHub outage"
+      ]
+    },
+    {
+      "id": "A13",
+      "phase": "migration",
+      "title": "PWA/WebAPK to GitHub native APK migration UX and installer ownership",
+      "actions": [
+        "Inventory existing website PWA installer, manifest id/scope and any Android TWA/WebAPK package",
+        "Explain to existing PWA-installed users the native APK is a separate application if package identities differ",
+        "Prevent duplicate Install prompt inside installed TWA; keep PWA path discoverable",
+        "Verify Android OS permission for browser initial install and separate in-app update installer origin"
+      ],
+      "outputs": [
+        "PWA migration FAQ",
+        "non-destructive install CTA behavior",
+        "installed TWA detection plan"
+      ],
+      "acceptance": [
+        "Existing PWA remains functional",
+        "APK installs with correct launcher identity",
+        "No silent PWA uninstall or cross-app data migration claim"
+      ]
+    }
+  ],
+  "feature_parity": [
+    {
+      "id": "homepage",
+      "user_visible_capability": "Home banners, featured products, categories",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "search",
+      "user_visible_capability": "Search, sorting, filter",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "product",
+      "user_visible_capability": "Product details, media, options, price/stock",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "variations",
+      "user_visible_capability": "Size/color image swatches and selected SKU",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "cart",
+      "user_visible_capability": "Persistent session, coupons, totals",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "checkout",
+      "user_visible_capability": "WooCommerce checkout, shipping, COD and configured gateways",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "account",
+      "user_visible_capability": "Login, registration, password reset, account profile",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "orders",
+      "user_visible_capability": "My Orders and tracking where site supports",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "content",
+      "user_visible_capability": "CMS pages, terms, shipping, returns, support",
+      "source": "website",
+      "priority": "must"
+    },
+    {
+      "id": "wallet",
+      "user_visible_capability": "Only if available on the customer-facing website",
+      "source": "website conditional",
+      "priority": "conditional"
+    },
+    {
+      "id": "delivery_advance",
+      "user_visible_capability": "Only if configured for customer checkout",
+      "source": "website conditional",
+      "priority": "conditional"
+    },
+    {
+      "id": "wishlist",
+      "user_visible_capability": "Only if current site functionality exists",
+      "source": "website conditional",
+      "priority": "conditional"
+    },
+    {
+      "id": "push",
+      "user_visible_capability": "Opt-in order alerts and promotions",
+      "source": "optional FCM/web push",
+      "priority": "optional"
+    },
+    {
+      "id": "app_version_updates",
+      "user_visible_capability": "GitHub Releases stable signed APK + Kotlin in-app updater with Android OS user confirmation",
+      "source": "android native",
+      "priority": "must"
+    }
+  ],
+  "security_requirements": [
+    "Do not expose admin MCP tools or credentials to customer app",
+    "Enforce server-side checks on checkout, stock and price",
+    "Never bypass Android package install protections",
+    "No arbitrary JavaScript bridge to privileged native or WordPress operations",
+    "Use least privilege, HTTPS, privacy policy and consented push",
+    "Audit third-party payment/checkout deep links and browser origin constraints"
+  ],
+  "acceptance_tests": [
+    {
+      "id": "AT-01",
+      "description": "PWA manifest and service worker are valid and have non-conflicting scopes"
+    },
+    {
+      "id": "AT-02",
+      "description": "Storefront accessibility on 360px, 390px, 412px width and larger screens"
+    },
+    {
+      "id": "AT-03",
+      "description": "TLS/HTTPS-only navigation with expected externally authorized gateway exception"
+    },
+    {
+      "id": "AT-04",
+      "description": "Asset Links verify final app signing fingerprint and package ID"
+    },
+    {
+      "id": "AT-05",
+      "description": "Open product deep link from outside app and navigate back safely"
+    },
+    {
+      "id": "AT-06",
+      "description": "Published products appear without APK rebuild"
+    },
+    {
+      "id": "AT-07",
+      "description": "Updated price displayed upon next navigation/refresh online and revalidated at checkout"
+    },
+    {
+      "id": "AT-08",
+      "description": "Updated stock prevents purchasing unavailable variation"
+    },
+    {
+      "id": "AT-09",
+      "description": "Product image/gallery and image swatches work"
+    },
+    {
+      "id": "AT-10",
+      "description": "Multi-step search/category/filter/pagination work"
+    },
+    {
+      "id": "AT-11",
+      "description": "Cart persists correctly across expected app restarts"
+    },
+    {
+      "id": "AT-12",
+      "description": "No user A cart shown to user B after sign-out/account switch"
+    },
+    {
+      "id": "AT-13",
+      "description": "Cart coupon apply/remove and total changes reflected"
+    },
+    {
+      "id": "AT-14",
+      "description": "Variation SKU/color/size selected correctly"
+    },
+    {
+      "id": "AT-15",
+      "description": "Guest checkout works if website permits"
+    },
+    {
+      "id": "AT-16",
+      "description": "Logged-in checkout works and My Account visible"
+    },
+    {
+      "id": "AT-17",
+      "description": "Payment successful, declined and cancelled callbacks handled"
+    },
+    {
+      "id": "AT-18",
+      "description": "Payment provider external redirect/return completes without duplicate payment"
+    },
+    {
+      "id": "AT-19",
+      "description": "COD and any delivery advance respect server-side eligibility settings"
+    },
+    {
+      "id": "AT-20",
+      "description": "Shipping areas, charges and customer addresses work in BDT"
+    },
+    {
+      "id": "AT-21",
+      "description": "Order created exactly once and server confirms final totals"
+    },
+    {
+      "id": "AT-22",
+      "description": "My Orders and order tracking work only for authorized customer"
+    },
+    {
+      "id": "AT-23",
+      "description": "Password reset and email verification are functional"
+    },
+    {
+      "id": "AT-24",
+      "description": "No excessive cache of live stock/cart/checkout/private data"
+    },
+    {
+      "id": "AT-25",
+      "description": "Offline entry clearly states ordering unavailable and offers retry"
+    },
+    {
+      "id": "AT-26",
+      "description": "Android back and deep links work through all major paths"
+    },
+    {
+      "id": "AT-27",
+      "description": "PDF/file download flow (if relevant) works safely"
+    },
+    {
+      "id": "AT-28",
+      "description": "GitHub APK updater never invokes Google Play APIs or asks users to update through a store."
+    },
+    {
+      "id": "AT-30",
+      "description": "Sideload APK update requires Android-supported user approval and checks version/signature/hash"
+    },
+    {
+      "id": "AT-31",
+      "description": "Signing key protected and app update remains compatible"
+    },
+    {
+      "id": "AT-32",
+      "description": "No WooCommerce admin API key or MCP credentials embedded in app binary"
+    },
+    {
+      "id": "AT-33",
+      "description": "Permissions for camera/location/notifications are minimal and consent-driven"
+    },
+    {
+      "id": "AT-34",
+      "description": "Performance under slow 4G and network switches acceptable"
+    },
+    {
+      "id": "AT-35",
+      "description": "App listing privacy policy, disclosures, screenshots and content rating reviewed"
+    },
+    {
+      "id": "AT-37",
+      "description": "Rollback procedure for website-side PWA regressions tested"
+    },
+    {
+      "id": "AT-38",
+      "description": "Native feature additions require versioned app release but CMS changes do not"
+    },
+    {
+      "id": "GH-01",
+      "description": "A new public stable GitHub release is selected; prerelease and draft releases are ignored."
+    },
+    {
+      "id": "GH-02",
+      "description": "App compares numeric versionCode rather than lexicographic versionName."
+    },
+    {
+      "id": "GH-03",
+      "description": "Same-version or lower-version release never prompts to install."
+    },
+    {
+      "id": "GH-04",
+      "description": "Release asset is from fixed configured owner/repository and has exact expected APK file name."
+    },
+    {
+      "id": "GH-05",
+      "description": "APK SHA-256 is checked on-device and mismatched payload is rejected with no installation."
+    },
+    {
+      "id": "GH-06",
+      "description": "APK package/applicationId and signing certificate are checked; mismatch is blocked."
+    },
+    {
+      "id": "GH-07",
+      "description": "Same signer and package ID with higher versionCode updates installed APK without uninstalling it."
+    },
+    {
+      "id": "GH-08",
+      "description": "APK install launches native Android user confirmation and never silently proceeds."
+    },
+    {
+      "id": "GH-09",
+      "description": "Android 8+ denied install-from-this-source shows safe settings guidance, with manual return and retry."
+    },
+    {
+      "id": "GH-10",
+      "description": "Initial footer button on Android routes to verified GitHub signed APK or landing page."
+    },
+    {
+      "id": "GH-11",
+      "description": "Non-Android install path remains functional with existing PWA guidance."
+    },
+    {
+      "id": "GH-12",
+      "description": "Existing PWA install is not silently removed and app-launcher conflict is resolved in UX."
+    },
+    {
+      "id": "GH-13",
+      "description": "Installed TWA never repeatedly prompts users to install same APK."
+    },
+    {
+      "id": "GH-14",
+      "description": "No Google Play, Play Core, Play Store link, AAB requirement or embedded GitHub private token."
+    },
+    {
+      "id": "GH-15",
+      "description": "GitHub API 403 rate-limit/404/timeout offline does not interrupt shopping or login."
+    },
+    {
+      "id": "GH-16",
+      "description": "Checks are throttled and cached; no battery-draining hourly polling."
+    },
+    {
+      "id": "GH-17",
+      "description": "Update download cancellation cleans up temp files; old app remains fully functional."
+    },
+    {
+      "id": "GH-18",
+      "description": "Real device upgrade preserves TWA website session where the browser allows, and existing Android app data."
+    },
+    {
+      "id": "GH-19",
+      "description": "TWA Digital Asset Links matches release signing certificate, so UI launches verified origin."
+    },
+    {
+      "id": "GH-20",
+      "description": "Website product/price/stock/offer updates appear without new APK; cart/account/checkout not stale-cached."
+    },
+    {
+      "id": "GH-21",
+      "description": "Release CI protects signing keys, verifies APK signing and publishes matching sha256 and release notes."
+    },
+    {
+      "id": "GH-22",
+      "description": "Rollback to old website content unaffected; bad binary release handled by higher versionCode hotfix, no downgrade install."
+    },
+    {
+      "id": "GH-23",
+      "description": "Download HTTPS redirect host/path/mime/size policy prevents accepting arbitrary untrusted APK."
+    },
+    {
+      "id": "GH-24",
+      "description": "Production install button code changes are staged/tested and require explicit owner approval."
+    },
+    {
+      "id": "GH-25",
+      "description": "App updater UI is accessible via native entry point independent of website JavaScript."
+    },
+    {
+      "id": "GH-26",
+      "description": "Native update does not change any Dreminex Native MCP/product publisher code or service."
+    }
+  ],
+  "deliverables_for_codex": [
+    "Android Studio/Bubblewrap source repo",
+    "PWA audit and required changes as reviewed patch",
+    "Digital Asset Links assetlinks.json generated with actual fingerprints",
+    "tested in-app update flow and direct channel guidance",
+    "feature parity report and test evidence",
+    "SHA-256 of build artifacts",
+    "independent README installation and rollback",
+    "Public GitHub Release APK + update-manifest.json + checksums.sha256",
+    "A user-consented native in-app updater in signed APK",
+    "First-install CTA patch for existing website with safe PWA fallback",
+    "GitHub Actions release signing workflow with secret protection",
+    "README for owner (GitHub release update steps, key backup, user installation guidance)"
+  ],
+  "release_gates": [
+    "Do not write to WordPress, staging, production, or GitHub during planning; obtain owner approval before any deployment or release",
+    "Do not claim GitHub automatic/silent APK installation; Android PackageInstaller consent is required",
+    "No Google Play Store dependency; user explicitly chose GitHub Releases",
+    "Release keystore private and consistent across updates; no public git commits of secrets",
+    "Do not publish first stable APK until real Android installation and upgrade test passes",
+    "Never replace/remove existing website PWA install UX until current handler is audited and staging patch approved",
+    "Keep project isolated from Dreminex Native MCP and Product Preparation"
+  ],
+  "research_sources": [
+    {
+      "name": "Android TWA overview",
+      "url": "https://developer.android.com/develop/ui/views/layout/webapps/trusted-web-activities"
+    },
+    {
+      "name": "Google Bubblewrap",
+      "url": "https://github.com/GoogleChromeLabs/bubblewrap"
+    },
+    {
+      "name": "Alternative Android distribution",
+      "url": "https://developer.android.com/distribute/marketing-tools/alternative-distribution"
+    },
+    {
+      "name": "WooCommerce Store API",
+      "url": "https://developer.woocommerce.com/docs/apis/store-api/"
+    },
+    {
+      "title": "Android: Publish your app — Install unknown apps",
+      "url": "https://developer.android.com/studio/publish",
+      "purpose": "User per-source consent for installing from outside trusted app stores"
+    },
+    {
+      "title": "Android: How app updates work",
+      "url": "https://developer.android.com/google/play/app-updates",
+      "purpose": "Package name, signer and versionCode compatibility conditions"
+    },
+    {
+      "title": "GitHub REST API: Releases",
+      "url": "https://docs.github.com/en/rest/releases/releases",
+      "purpose": "Latest stable release and asset browser_download_url metadata"
+    },
+    {
+      "title": "GitHub REST API: Release assets",
+      "url": "https://docs.github.com/en/rest/releases/assets",
+      "purpose": "Release asset digest and download semantics"
+    },
+    {
+      "title": "Chrome: Trusted Web Activity Quick Start",
+      "url": "https://developer.chrome.com/docs/android/trusted-web-activity/quick-start",
+      "purpose": "TWA packaging and Digital Asset Links"
+    }
+  ],
+  "codex_execute_instructions": {
+    "initial_task": "Implement this independent GitHub Releases APK distribution/update blueprint in a separate Android customer app repository/branch. Inspect actual current Android project and live website PWA CTA first. NO Google Play integration. New users install by existing Install Dreminex App site entry; installed Android APK shows update based on GitHub Releases and invokes Android PackageInstaller with explicit user approval. Never write production before owner approval; do not alter MCP project.",
+    "implementation_order": [
+      "A01",
+      "A02",
+      "A03",
+      "A04",
+      "A05",
+      "A06",
+      "A07",
+      "A08",
+      "A09",
+      "A10",
+      "A11",
+      "A12",
+      "A13"
+    ],
+    "codex_must_return": [
+      "actual files changed and reasons",
+      "new Android source and Gradle configuration",
+      "GitHub CI release pipeline",
+      "GitHub release/update-manifest implementation",
+      "web install CTA diff and approval request",
+      "test result matrix including GH-01 through GH-26",
+      "APK signing fingerprint with secrets excluded",
+      "signed APK SHA-256 and release download receipts",
+      "user-safe rollback / hotfix procedure"
+    ],
+    "do_not_presume_existing": [
+      "github owner/repo",
+      "first APK version, cert, package",
+      "website CTA click handler",
+      "Android native updater existing",
+      "permission granted by Android OS"
+    ]
+  },
+  "decision_record": {
+    "owner_explicit_choice": "GitHub Releases self-distribution; no Google Play Store",
+    "install_entry": "Reuse existing website Install Dreminex App CTA shown in owner screenshot, after auditing its actual current click handler (likely PWA), switching Android flow to signed APK download without destroying PWA path for other devices.",
+    "binary_updates": "GitHub-based Android native updater; notify in app and install via Android PackageInstaller with user confirmation; never silent install.",
+    "website_content_updates": "Origin website itself; product/content/prices/orders changes are network sourced; no binary update needed.",
+    "do_not_merge": [
+      "Dreminex Native MCP",
+      "Dreminex Product Preparation",
+      "Dreminex Nexus management app"
+    ],
+    "site_writes_now": false,
+    "app_built_now": false,
+    "choices_codex_must_resolve_from_actual_repo": [
+      "actual github owner/repo (do not invent)",
+      "whether repository public; use public release repo for unauthenticated customers",
+      "existing PWA plugin install button source and click handler",
+      "existing PWA web manifest and service worker",
+      "actual Android package ID, keystore existence, release signing certificate",
+      "existing Android project/flavors and update policy"
+    ],
+    "do_not_request_google_play_setup": true
+  },
+  "website_install_button": {
+    "evidence": "Owner screenshot from staging footer shows cyan \"Install Dreminex App\" button. Actual click handler/production state NOT verified.",
+    "audit_steps": [
+      "Find current WordPress theme, footer template or PWA plugin hook creating CTA using read-only source inspection",
+      "Record actual URL or JS click behavior, installed-PWA detection, OS filtering, and current traffic analytics",
+      "Check button is not merely PWA before replacement",
+      "Confirm production vs staging site lock and owner permission before changing WordPress"
+    ],
+    "desired_routes": {
+      "android_browser": "Link to dedicated /android-app/ landing page OR directly download latest signed APK through a trusted resolver; explain manual OS installation permission",
+      "android_twa": "Open native app update settings or hide Install CTA, without leaving users in reinstall loop",
+      "ios": "PWA Add to Home Screen guidance; no APK",
+      "desktop": "Offer existing PWA/website, no APK",
+      "android_pwa_installed": "Show explicit choice PWA vs Native APK; user controls transition"
+    },
+    "recommended_link_contract": {
+      "stable_landing_page": "https://dreminexfashion.store/android-app/ (proposal, not existing verified URL)",
+      "latest_release_source": "GitHub Releases, repo owner/name to be configured",
+      "website_fallback": "On GitHub API failure: show normal Store + retry, do not link stale unknown APK"
+    },
+    "web_changes_are_separate_repo_or_theme_patch": "Storefront CTA patch must have small, reversible diff, with approval and cache invalidation test"
+  },
+  "github_ci_release_pipeline": {
+    "trigger": "Protected tag vX.Y.Z, release manual approval",
+    "jobs": [
+      "Lint and Android unit tests",
+      "Build release APK with fixed applicationId and incremented versionCode",
+      "Gradle dependency checks, Android signing/verification",
+      "Generate SHA-256 and release manifest with matching APK digest, package ID, versionCode, minSdk, changelog",
+      "Device emulator/install upgrade smoke test using last signed release",
+      "After successful tests, publish GitHub Release with immutable identity/release assets",
+      "Post-release GET latest, fetch asset digest/checksum and test production footer download & native updater"
+    ],
+    "secrets": [
+      "RELEASE_KEYSTORE_BASE64",
+      "RELEASE_KEY_ALIAS",
+      "RELEASE_STORE_PASSWORD",
+      "RELEASE_KEY_PASSWORD",
+      "optional manifest signing private key"
+    ],
+    "least_privilege_permissions": "contents:write only for release publication; default read, protect environments and tags",
+    "forbidden": [
+      "commit unencrypted release keystore",
+      "embed GitHub PAT/token in mobile APK",
+      "allow untrusted PR workflow to access signing secrets",
+      "publish unsigned debug builds as stable",
+      "replace old release asset silently without new tag/version bump"
+    ],
+    "outputs": [
+      "signed APK",
+      "update-manifest.json",
+      "checksums.sha256",
+      "verification report",
+      "GitHub stable release URL"
+    ]
+  },
+  "release_manifest_contract": {
+    "required": [
+      "schema_version",
+      "channel",
+      "version_name",
+      "version_code",
+      "package_name",
+      "min_sdk",
+      "apk",
+      "release_notes"
+    ],
+    "apk_required": [
+      "filename",
+      "browser_download_url",
+      "sha256",
+      "size_bytes"
+    ],
+    "validate_constraints": [
+      "schema_version recognized",
+      "channel=stable",
+      "version_code integer greater than installed",
+      "package_name exact app ID",
+      "https-only URL and repo/source expected",
+      "sha256 exactly 64 lowercase hex",
+      "size matches Content-Length/actual downloaded bytes when possible",
+      "signature/certificate checked against installed package",
+      "release not draft/prerelease"
+    ],
+    "example_file": "release-manifest.example.json",
+    "trust_model": "HTTPS API + pinned configured public repo; SHA-256 verifies transferred bytes; update Android signing identity verification prevents replacement by arbitrary cert. Optional detached manifest signature improves security against compromised release metadata."
+  },
+  "compatibility_and_product_boundaries": {
+    "same_production_origin": "https://dreminexfashion.store/",
+    "not_an_admin_app": true,
+    "website_cart_checkout_account": "Live website as canonical; no duplication of payment secrets on APK",
+    "twa_asset_links": "Use real signed APK cert fingerprint for /.well-known/assetlinks.json; app link association and PWA manifest must be audited",
+    "customer_login": "Session cookie and verified origin behavior must be tested in actual TWA/Chrome version",
+    "push_notifications": "Optional; must not be prerequisite to updater; ask notifications permission when needed, without aggressive prompts",
+    "avoid_conflicting_webapk": "No silent migration/uninstall of prior PWA; explain coexistence or user-led removal",
+    "distribution_legal": "This is direct distribution only. Platform install/Play Protect warnings are respected; update shall not circumvent protection."
+  }
+}
