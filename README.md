@@ -11,7 +11,14 @@ Standalone customer app for `https://dreminexfashion.store/`. The store pages, l
 - APK asset: `dreminex-fashion-release.apk`
 - Pinned release certificate SHA-256 is public in Gradle configuration and `docs/assetlinks.json`.
 
-The separate Store signing key is never committed. Release builds use four Store-only `DREMINEX_FASHION_*` secrets in the private release environment; they are isolated from Nexus signing credentials.
+The separate Store signing key is never committed. Future release builds use a GitHub environment named `dreminex-fashion-release` in the public release repository, isolated from Nexus signing credentials. Add these environment secrets there:
+
+- `DREMINEX_FASHION_KEYSTORE_B64` — base64 encoding of the Store JKS file
+- `DREMINEX_FASHION_STORE_PASSWORD`
+- `DREMINEX_FASHION_KEY_ALIAS`
+- `DREMINEX_FASHION_KEY_PASSWORD`
+
+The first v1.0.1 release uses the verified prebuilt APK, so those secrets are not needed to publish that bootstrap release.
 
 ## Updater behavior
 
