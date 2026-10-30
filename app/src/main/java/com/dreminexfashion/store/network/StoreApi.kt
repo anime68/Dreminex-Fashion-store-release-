@@ -5,6 +5,8 @@ import com.dreminexfashion.store.data.StoreCategory
 import com.dreminexfashion.store.data.StoreManifest
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -65,18 +67,19 @@ class StoreApi(siteUrl: String, private val client: OkHttpClient = OkHttpClient(
         val items = json.parseToJsonElement(requestBody(builder.build())).jsonArray.map { value ->
             val item = value.jsonObject
             val prices = item.jsonObjectOrNull("prices")
-            val categories = item.arrayOrEmpty("categories").map { categoryItem ->
-                val categoryObject = categoryItem.jsonObject
-                com.dreminexfashion.store.data.ProductCategory(
-                    id = categoryObject.int("id"), name = categoryObject.string("name"), slug = categoryObject.string("slug"),
-                )
+            val categories = item.arrayOrEmpty("categories").mapNotNull { categoryItem ->
+                categoryItem.jsonObjectOrNull()?.let { categoryObject ->
+                    com.dreminexfashion.store.data.ProductCategory(
+                        id = categoryObject.int("id"), name = categoryObject.string("name"), slug = categoryObject.string("slug"),
+                    )
+                }
             }
             val currency = prices?.string("currency_code") ?: "BDT"
             val minorUnit = prices?.int("currency_minor_unit") ?: 2
             com.dreminexfashion.store.data.StoreProduct(
                 id = item.int("id"), name = item.string("name"), slug = item.string("slug"), permalink = item.string("permalink"),
                 description = item.string("short_description").ifBlank { item.string("description") },
-                images = item.arrayOrEmpty("images").mapNotNull { it.jsonObject.stringOrNull("src") },
+                images = item.arrayOrEmpty("images").mapNotNull { it.jsonObjectOrNull()?.stringOrNull("src") ?: it.jsonPrimitiveOrNull()?.contentOrNull },
                 categories = categories, type = item.string("type"), sku = item.string("sku"), currency = currency,
                 price = prices?.minorPrice("price", minorUnit) ?: "", regular_price = prices?.minorPrice("regular_price", minorUnit) ?: "",
                 sale_price = prices?.minorPrice("sale_price", minorUnit) ?: "", on_sale = item.boolean("on_sale"),
@@ -101,12 +104,14 @@ class StoreApi(siteUrl: String, private val client: OkHttpClient = OkHttpClient(
     }
 }
 
-private fun JsonObject.string(key: String): String = this[key]?.jsonPrimitive?.content.orEmpty()
-private fun JsonObject.stringOrNull(key: String): String? = this[key]?.jsonPrimitive?.contentOrNull
-private fun JsonObject.int(key: String): Int = this[key]?.jsonPrimitive?.intOrNull ?: 0
-private fun JsonObject.boolean(key: String): Boolean = this[key]?.jsonPrimitive?.booleanOrNull ?: false
-private fun JsonObject.jsonObjectOrNull(key: String): JsonObject? = this[key]?.jsonObject
-private fun JsonObject.arrayOrEmpty(key: String) = this[key]?.jsonArray.orEmpty()
+private fun JsonObject.string(key: String): String = this[key]?.jsonPrimitiveOrNull()?.contentOrNull.orEmpty()
+private fun JsonObject.stringOrNull(key: String): String? = this[key]?.jsonPrimitiveOrNull()?.contentOrNull
+private fun JsonObject.int(key: String): Int = this[key]?.jsonPrimitiveOrNull()?.intOrNull ?: 0
+private fun JsonObject.boolean(key: String): Boolean = this[key]?.jsonPrimitiveOrNull()?.booleanOrNull ?: false
+private fun JsonObject.jsonObjectOrNull(key: String): JsonObject? = this[key]?.jsonObjectOrNull()
+private fun JsonObject.arrayOrEmpty(key: String): JsonArray = this[key] as? JsonArray ?: JsonArray(emptyList())
+private fun JsonElement.jsonObjectOrNull(): JsonObject? = this as? JsonObject
+private fun JsonElement.jsonPrimitiveOrNull(): kotlinx.serialization.json.JsonPrimitive? = this as? kotlinx.serialization.json.JsonPrimitive
 private fun JsonObject.minorPrice(key: String, minorUnit: Int): String {
     val raw = string(key)
     if (raw.isBlank()) return ""
