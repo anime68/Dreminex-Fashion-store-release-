@@ -24,5 +24,7 @@ jobs:
           packages: platform-tools
       - name: Install Android API 36 build tools
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Native source contracts
+        run: python3 store_app_static_contract.py
       - name: Run unit tests and debug build
         run: ./gradlew --no-daemon testDebugUnitTest testReleaseUnitTest assembleDebug
