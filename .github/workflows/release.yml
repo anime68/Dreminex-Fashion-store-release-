@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           apk="dreminex-fashion-release.apk"
-          expected_cert="414e613021a0f78624487656483f3b32645acc61b4a46ccfd94d9410acc72e74"
+          expected_cert="27db86423dd867633070257c7483c65c9df06ff6b02e971f5703a6736436b10d"
           actual_cert="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n1 | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
           test "$actual_cert" = "$expected_cert"
           badging="$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk")"
