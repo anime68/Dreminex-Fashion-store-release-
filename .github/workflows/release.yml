@@ -103,4 +103,5 @@ jobs:
             dreminex-fashion-release.apk
             update-manifest.json
             checksums.sha256
+            release-assets/dreminex-native-store-app-v0.1.0.zip
           generate_release_notes: true
