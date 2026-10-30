@@ -41,7 +41,7 @@ android {
         buildConfigField("String", "STORE_URL", "\"https://dreminexfashion.store/\"")
         buildConfigField("String", "RELEASE_OWNER", "\"anime68\"")
         buildConfigField("String", "RELEASE_REPOSITORY", "\"Dreminex-Fashion-store-release-\"")
-        buildConfigField("String", "RELEASE_CERT_SHA256", "\"414e613021a0f78624487656483f3b32645acc61b4a46ccfd94d9410acc72e74\"")
+        buildConfigField("String", "RELEASE_CERT_SHA256", "\"27db86423dd867633070257c7483c65c9df06ff6b02e971f5703a6736436b10d\"")
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
