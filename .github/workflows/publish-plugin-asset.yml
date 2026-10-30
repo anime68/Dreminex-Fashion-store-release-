@@ -1,0 +1,22 @@
+name: Publish Dreminex Native Store plugin asset
+
+on:
+  push:
+    paths:
+      - "release-assets/dreminex-native-store-app-v0.1.0.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/feat/native-catalog-app-v1.1.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach plugin ZIP to v1.1.2 release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v1.1.2
+          fail_on_unmatched_files: true
+          files: release-assets/dreminex-native-store-app-v0.1.0.zip
